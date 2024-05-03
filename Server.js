@@ -3,8 +3,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const swaggerUi = require("swagger-ui-express");
-const swaggerDocument = require("./swagger");
+
+// Use routes
+const userRoutes = require("./routes/userRoute");
+const categoryRoutes = require("./routes/categoryRoute");
 
 mongoose
   .connect(process.env.MONGODB_URI)
@@ -21,11 +23,9 @@ app.use(cors());
 app.get("/", (req, res) => {
   res.send("Hello");
 });
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Use routes
-const userRoutes = require("./routes/userRoute");
 app.use("/api/users", userRoutes);
+app.use("/api", categoryRoutes);
 
 const port = process.env.PORT || 8000;
 
