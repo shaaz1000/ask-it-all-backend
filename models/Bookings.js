@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
 
-// Define Booking schema
-const bookingSchema = new mongoose.Schema(
+const BookingSchema = new mongoose.Schema(
   {
     mentorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Mentor",
+      required: true,
+    },
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    menteeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    bookingDateTime: {
+      type: Date,
       required: true,
     },
     categoryId: {
@@ -18,22 +21,27 @@ const bookingSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
-    concept: {
-      type: String,
-      required: true,
-    },
-    bookingDate: {
-      type: Date,
-      required: true,
-    },
-    bookingTime: {
-      type: String,
-      required: true,
-    },
     bookingStatus: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled"],
-      default: "pending",
+      enum: ["Pending", "Accepted", "Scheduled", "Cancelled", "Declined"],
+      default: "Pending",
+    },
+    totalCost: {
+      type: Number,
+      required: true,
+    },
+    duration: {
+      type: String,
+      required: true, // Duration in minutes or hours, depending on your needs
+    },
+    questionsAsked: [
+      {
+        type: String,
+      },
+    ],
+    agoraId: {
+      type: String,
+      required: true,
     },
   },
   {
@@ -41,7 +49,4 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
-// Create Booking model
-const Booking = mongoose.model("Booking", bookingSchema);
-
-module.exports = Booking;
+module.exports = mongoose.model("Booking", BookingSchema);

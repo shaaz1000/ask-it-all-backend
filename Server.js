@@ -7,6 +7,8 @@ const cors = require("cors");
 // Use routes
 const userRoutes = require("./routes/userRoute");
 const categoryRoutes = require("./routes/categoryRoute");
+const mentorRoute = require("./routes/mentorRoute");
+const bookingRoute = require("./routes/bookingRoute");
 
 mongoose
   .connect(process.env.MONGODB_URI)
@@ -25,7 +27,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
-app.use("/api", categoryRoutes);
+app.use("/api/mentors", mentorRoute);
+app.use("/api/booking", bookingRoute);
+app.use("/api/category", categoryRoutes);
 
 const port = process.env.PORT || 8000;
 

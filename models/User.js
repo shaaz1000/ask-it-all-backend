@@ -1,40 +1,47 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const UserType = {
-  Mentor: "MENTOR",
-  Mentee: "MENTEE",
-};
 const UserSchema = new mongoose.Schema(
   {
     email: {
       type: String,
       required: true,
       unique: true,
-      index: true, // Indexing the email field for faster query performance
-    },
-    userType: {
-      type: String,
-      default: UserType.Mentee,
-      index: true, // Indexing the userType field for faster query performance
+      index: true,
     },
     password: {
       type: String,
       required: true,
     },
+    mentorsList: [
+      {
+        mentor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Mentor",
+        },
+        isCurrent: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
     contactNumber: {
       type: String,
       required: true,
+    },
+    totalCreditsAvailable: {
+      type: Number,
+      default: 0,
     },
     education: [
       {
         universityName: {
           type: String,
-          default: "Unknown", // Default value for universityName
+          default: "Unknown",
         },
         degree: {
           type: String,
-          default: "Unknown", // Default value for universityName
+          default: "Unknown",
         },
         passingYear: {
           type: Number,
@@ -42,7 +49,7 @@ const UserSchema = new mongoose.Schema(
         },
         cgpa: {
           type: Number,
-          default: null, // Setting cgpa to null if not provided
+          default: null,
         },
       },
     ],
@@ -50,17 +57,17 @@ const UserSchema = new mongoose.Schema(
       {
         companyName: {
           type: String,
-          default: "Unknown", // Default value for companyName
+          default: "Unknown",
         },
         designationHistory: [
           {
             designation: {
               type: String,
-              default: "Unknown", // Default value for designation
+              default: "Unknown",
             },
             fromDate: {
               type: Date,
-              default: Date.now, // Default value for fromDate
+              default: Date.now,
             },
             toDate: {
               type: Date,
@@ -76,11 +83,10 @@ const UserSchema = new mongoose.Schema(
     ],
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 
-// Pre-save hook to hash password before saving
 UserSchema.pre("save", function (next) {
   const user = this;
 
@@ -104,4 +110,5 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
     throw new Error(error);
   }
 };
+
 module.exports = mongoose.model("User", UserSchema);

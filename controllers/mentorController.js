@@ -1,47 +1,52 @@
-const User = require("../models/User");
+const Mentor = require("../models/Mentor");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-
 // Signup
 exports.signup = async (req, res) => {
   try {
     const {
+      name,
       email,
       password,
-      contactNumber,
+      socialHandles,
+      ratePerHour,
+      description,
       education,
       workExperience,
-      mentorsList,
-      totalCreditsAvailable,
+      availableTimeSlots,
+      category,
     } = req.body;
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    const mentorExists = await Mentor.findOne({ email });
+    if (mentorExists) {
       return res
         .status(400)
         .json({ success: false, message: "Email already exists" });
     }
 
-    const newUser = new User({
+    const newMentor = new Mentor({
+      name,
       email,
       password,
-      contactNumber,
+      socialHandles,
+      ratePerHour,
+      description,
       education,
       workExperience,
-      mentorsList,
-      totalCreditsAvailable,
+      availableTimeSlots,
+      category,
     });
 
-    await newUser.save();
+    await newMentor.save();
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: newMentor._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
-      user: newUser,
+      message: "Mentor created successfully",
+      mentor: newMentor,
       token,
     });
   } catch (error) {
@@ -54,15 +59,15 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const mentor = await Mentor.findOne({ email });
 
-    if (!user) {
+    if (!mentor) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Mentor not found" });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await mentor.comparePassword(password);
 
     if (!isMatch) {
       return res
@@ -70,14 +75,14 @@ exports.login = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: mentor._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
     res.status(200).json({
       success: true,
       message: "Logged in successfully",
-      user,
+      mentor,
       token,
     });
   } catch (error) {
@@ -86,39 +91,37 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get All Users
-exports.getAllUsers = async (req, res) => {
+// Get All Mentors
+exports.getAllMentors = async (req, res) => {
   try {
-    const users = await User.find().populate("mentorsList.mentor");
-    res.status(200).json({ success: true, users });
+    const mentors = await Mentor.find().populate("category");
+    res.status(200).json({ success: true, mentors });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Get User by ID
-exports.getUser = async (req, res) => {
+// Get Mentor by ID
+exports.getMentor = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate(
-      "mentorsList.mentor"
-    );
+    const mentor = await Mentor.findById(req.params.id).populate("category");
 
-    if (!user) {
+    if (!mentor) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Mentor not found" });
     }
 
-    res.status(200).json({ success: true, user });
+    res.status(200).json({ success: true, mentor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Update User by ID
-exports.updateUser = async (req, res) => {
+// Update Mentor by ID
+exports.updateMentor = async (req, res) => {
   try {
     const updatedData = req.body;
 
@@ -127,39 +130,39 @@ exports.updateUser = async (req, res) => {
       updatedData.password = await bcrypt.hash(updatedData.password, salt);
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, updatedData, {
+    const mentor = await Mentor.findByIdAndUpdate(req.params.id, updatedData, {
       new: true,
     });
 
-    if (!user) {
+    if (!mentor) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Mentor not found" });
     }
 
     res
       .status(200)
-      .json({ success: true, message: "User updated successfully", user });
+      .json({ success: true, message: "Mentor updated successfully", mentor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// Delete User by ID
-exports.deleteUser = async (req, res) => {
+// Delete Mentor by ID
+exports.deleteMentor = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const mentor = await Mentor.findByIdAndDelete(req.params.id);
 
-    if (!user) {
+    if (!mentor) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Mentor not found" });
     }
 
     res
       .status(200)
-      .json({ success: true, message: "User deleted successfully" });
+      .json({ success: true, message: "Mentor deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });

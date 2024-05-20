@@ -6,6 +6,14 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    subcategories: [
+      {
+        subcategoryName: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
