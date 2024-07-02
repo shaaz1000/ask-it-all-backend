@@ -41,7 +41,7 @@ const BookingSchema = new mongoose.Schema(
     ],
     agoraId: {
       type: String,
-      required: true,
+      // required: true,
     },
   },
   {

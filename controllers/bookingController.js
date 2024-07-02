@@ -13,7 +13,7 @@ exports.createBooking = async (req, res) => {
       "categoryId",
       "totalCost",
       "duration",
-      "agoraId",
+      // "agoraId",
     ];
     for (const field of requiredFields) {
       if (!bookingData[field]) {
@@ -84,13 +84,34 @@ exports.getAllBookings = async (req, res) => {
 exports.getBookingsByUser = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const bookings = await Booking.find({ userId })
+    const currentDate = new Date(); // Get the current date
+
+    const bookings = await Booking.find({
+      userId,
+      bookingDateTime: { $gte: currentDate }, // Filter out past bookings
+    })
       .populate("mentorId")
-      .populate("categoryId");
+      .populate("categoryId")
+      .sort({ bookingDateTime: 1 }); // Sort bookings by bookingDateTime
+
+    // Segregate bookings based on status
+    const segregatedBookings = {
+      upcoming: bookings.filter(
+        (booking) =>
+          booking.bookingStatus === "Accepted" ||
+          booking.bookingStatus === "Scheduled"
+      ),
+      pending: bookings.filter(
+        (booking) => booking.bookingStatus === "Pending"
+      ),
+      cancelled: bookings.filter(
+        (booking) => booking.bookingStatus === "Cancelled"
+      ),
+    };
 
     res.status(200).json({
       success: true,
-      bookings,
+      bookings: segregatedBookings,
     });
   } catch (error) {
     console.error(error);

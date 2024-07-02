@@ -91,11 +91,35 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get All Mentors
+// Get all mentors
 exports.getAllMentors = async (req, res) => {
   try {
-    const mentors = await Mentor.find().populate("category");
-    res.status(200).json({ success: true, mentors });
+    const mentors = await Mentor.find({ isOnline: true }).populate("category");
+
+    const currentDate = new Date();
+
+    // Filter and sort the available time slots for each mentor
+    const updatedMentors = mentors.map((mentor) => {
+      mentor.availableTimeSlots = mentor.availableTimeSlots
+        .map((slot) => {
+          if (new Date(slot.date) < currentDate) {
+            return {
+              ...slot,
+              timeSlots: [],
+            };
+          }
+          return slot;
+        })
+        .filter(
+          (slot) =>
+            new Date(slot.date) >= currentDate || slot.timeSlots.length > 0
+        )
+        .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sorting by date in ascending order
+
+      return mentor;
+    });
+
+    res.status(200).json({ success: true, mentors: updatedMentors });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -112,6 +136,31 @@ exports.getMentor = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Mentor not found" });
     }
+
+    if (!mentor.isOnline) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Mentor is not online" });
+    }
+
+    const currentDate = new Date();
+
+    // Filter and sort the available time slots
+    mentor.availableTimeSlots = mentor.availableTimeSlots
+      .map((slot) => {
+        if (new Date(slot.date) < currentDate) {
+          return {
+            ...slot,
+            timeSlots: [],
+          };
+        }
+        return slot;
+      })
+      .filter(
+        (slot) =>
+          new Date(slot.date) >= currentDate || slot.timeSlots.length > 0
+      )
+      .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sorting by date in ascending order
 
     res.status(200).json({ success: true, mentor });
   } catch (error) {
@@ -130,15 +179,64 @@ exports.updateMentor = async (req, res) => {
       updatedData.password = await bcrypt.hash(updatedData.password, salt);
     }
 
-    const mentor = await Mentor.findByIdAndUpdate(req.params.id, updatedData, {
-      new: true,
-    });
+    const mentor = await Mentor.findById(req.params.id);
 
     if (!mentor) {
       return res
         .status(404)
         .json({ success: false, message: "Mentor not found" });
     }
+
+    if (updatedData.availableTimeSlots) {
+      updatedData.availableTimeSlots.forEach((newSlot) => {
+        const existingSlot = mentor.availableTimeSlots.find(
+          (slot) =>
+            new Date(slot.date).toISOString() ===
+            new Date(newSlot.date).toISOString()
+        );
+
+        if (existingSlot) {
+          newSlot.timeSlots.forEach((newTimeSlot) => {
+            if (
+              !existingSlot.timeSlots.some(
+                (timeSlot) =>
+                  timeSlot.from === newTimeSlot.from &&
+                  timeSlot.to === newTimeSlot.to
+              )
+            ) {
+              existingSlot.timeSlots.push(newTimeSlot);
+            }
+          });
+        } else {
+          mentor.availableTimeSlots.push(newSlot);
+        }
+      });
+
+      // Ensure unique time slots within the same date
+      mentor.availableTimeSlots = mentor.availableTimeSlots.map((slot) => {
+        const uniqueTimeSlots = [];
+        const seenTimeSlots = new Set();
+
+        slot.timeSlots.forEach((timeSlot) => {
+          const slotString = `${timeSlot.from}-${timeSlot.to}`;
+          if (!seenTimeSlots.has(slotString)) {
+            uniqueTimeSlots.push(timeSlot);
+            seenTimeSlots.add(slotString);
+          }
+        });
+
+        return {
+          ...slot,
+          timeSlots: uniqueTimeSlots,
+        };
+      });
+    }
+
+    // Exclude availableTimeSlots from updatedData to avoid overwriting
+    delete updatedData.availableTimeSlots;
+
+    Object.assign(mentor, updatedData);
+    await mentor.save();
 
     res
       .status(200)
@@ -148,7 +246,6 @@ exports.updateMentor = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 // Delete Mentor by ID
 exports.deleteMentor = async (req, res) => {
   try {

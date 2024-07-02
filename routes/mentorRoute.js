@@ -12,7 +12,7 @@ router.post("/login", mentorController.login);
 // router.delete("/:id", auth, mentorController.deleteMentor);
 router.get("/", mentorController.getAllMentors);
 router.get("/:id", mentorController.getMentor);
-router.put("/:id", mentorController.updateMentor);
+router.patch("/:id", mentorController.updateMentor);
 router.delete("/:id", mentorController.deleteMentor);
 
 module.exports = router;
