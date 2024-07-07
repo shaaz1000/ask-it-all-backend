@@ -16,8 +16,8 @@ exports.signup = async (req, res) => {
       availableTimeSlots,
       category,
     } = req.body;
-
-    const mentorExists = await Mentor.findOne({ email });
+    const lowerCaseEmail = email.toLowerCase();
+    const mentorExists = await Mentor.findOne({ email: lowerCaseEmail });
     if (mentorExists) {
       return res
         .status(400)
@@ -59,7 +59,8 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const mentor = await Mentor.findOne({ email });
+    const lowerCaseEmail = email.toLowerCase();
+    const mentor = await Mentor.findOne({ email: lowerCaseEmail });
 
     if (!mentor) {
       return res

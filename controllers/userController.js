@@ -15,7 +15,9 @@ exports.signup = async (req, res) => {
       totalCreditsAvailable,
     } = req.body;
 
-    const userExists = await User.findOne({ email });
+    const lowerCaseEmail = email.toLowerCase();
+
+    const userExists = await User.findOne({ email: lowerCaseEmail });
     if (userExists) {
       return res
         .status(400)
@@ -23,7 +25,7 @@ exports.signup = async (req, res) => {
     }
 
     const newUser = new User({
-      email,
+      email: lowerCaseEmail,
       password,
       contactNumber,
       education,
@@ -54,7 +56,8 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const lowerCaseEmail = email.toLowerCase();
+    const user = await User.findOne({ email: lowerCaseEmail });
 
     if (!user) {
       return res

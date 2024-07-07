@@ -94,6 +94,7 @@ const mentorSchema = new mongoose.Schema(
       required: true,
       unique: true,
       index: true,
+      lowercase: true,
     },
     password: {
       type: String,
