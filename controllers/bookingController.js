@@ -127,9 +127,23 @@ exports.getBookingsByMentor = async (req, res) => {
       .populate("userId")
       .populate("categoryId");
 
+    const segregatedBookings = {
+      upcoming: bookings.filter(
+        (booking) =>
+          booking.bookingStatus === "Accepted" ||
+          booking.bookingStatus === "Scheduled"
+      ),
+      pending: bookings.filter(
+        (booking) => booking.bookingStatus === "Pending"
+      ),
+      cancelled: bookings.filter(
+        (booking) => booking.bookingStatus === "Cancelled"
+      ),
+    };
+
     res.status(200).json({
       success: true,
-      bookings,
+      bookings: segregatedBookings,
     });
   } catch (error) {
     console.error(error);
